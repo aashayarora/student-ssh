@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: student-ssh
+  labels:
+    app: student-ssh
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: student-ssh
+  template:
+    metadata:
+      labels:
+        app: student-ssh
+    spec:
+      containers:
+      - name: student-ssh
+        image: aaarora/student-ssh
+        ports:
+        - containerPort: 9122
+          hostPort: 9122
+        env:
+        - name: SSH_USER
+          value: # username
+        - name: SSH_PUB_KEY
+          value: # public key
+        volumeMounts:
+        - name: student-ssh
+          mountPath: /home/ # /home/username
+      volumes:
+      - name: student-ssh
+        persistentVolumeClaim:
+          claimName: student-ssh
+      nodeSelector:
+        kubernetes.io/hostname: nrp-02.nrp-nautilus.io
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: student-ssh
+spec:
+  storageClassName: rook-cephfs
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
